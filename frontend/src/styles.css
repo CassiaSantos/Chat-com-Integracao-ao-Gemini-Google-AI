@@ -111,3 +111,41 @@ html, body, #root {
   border-radius: 8px;
   border: 1px solid var(--bs-border-color);
 }
+
+/* Estilos para o conteúdo renderizado por Markdown */
+.text-content {
+  line-height: 1.6;
+}
+
+.text-content h1, .text-content h2, .text-content h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.text-content p {
+  margin-bottom: 0.5rem; /* Espaçamento entre parágrafos */
+}
+
+.text-content ul, .text-content ol {
+  padding-left: 1.5rem; /* Alinha as listas */
+  margin-bottom: 0.5rem;
+}
+
+.text-content strong {
+  color: #fff; /* Deixa o negrito com mais destaque */
+}
+
+.text-content code {
+  background-color: #111;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.text-content a {
+  color: #3391ff;
+  text-decoration: none;
+}
+.text-content a:hover {
+  text-decoration: underline;
+}
