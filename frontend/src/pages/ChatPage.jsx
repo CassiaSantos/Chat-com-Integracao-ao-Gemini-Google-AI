@@ -16,7 +16,7 @@ export default function ChatPage({ user, onLogout }) {
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
-  // Efeito para buscar as conversas via REST
+  // Efeito para buscar as conversas
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -31,23 +31,31 @@ export default function ChatPage({ user, onLogout }) {
     fetchConversations();
   }, []);
 
-  // Efeito para gerenciar os eventos de WebSocket (Refatorado para Streaming)
+  // Efeito para gerenciar os eventos de WebSocket
   useEffect(() => {
     const handleReceiveReplyChunk = ({ chunk }) => {
       setMessages(prevMessages => {
         const lastMessage = prevMessages[prevMessages.length - 1];
-        // Garante que estamos atualizando a mensagem correta: do assistente
         if (lastMessage && lastMessage.role === 'assistant') {
           const updatedLastMessage = { ...lastMessage, text: lastMessage.text + chunk };
           return [...prevMessages.slice(0, -1), updatedLastMessage];
         }
-        // Fallback caso algo inesperado aconteça
-        return [...prevMessages, { role: 'assistant', text: chunk, _id: Date.now() }];
+        return prevMessages;
       });
     };
     
-    const handleStreamEnd = () => {
-      setIsSending(false); // Reabilita o input
+    // --- LÓGICA DE ATUALIZAÇÃO DO TÍTULO NO FRONTEND ---
+    const handleStreamEnd = ({ newTitle }) => {
+      setIsSending(false);
+      // Se o backend enviou um novo título, usamos ele como a "fonte da verdade"
+      // para garantir que o frontend e o backend estejam sincronizados.
+      if (newTitle) {
+        setConversations(prevConvos =>
+          prevConvos.map(c =>
+            c._id === activeConversationId ? { ...c, title: newTitle } : c
+          )
+        );
+      }
     };
     
     const handleChatError = ({ error }) => {
@@ -70,9 +78,9 @@ export default function ChatPage({ user, onLogout }) {
       socket.off('streamEnd', handleStreamEnd);
       socket.off('chatError', handleChatError);
     };
-  }, []); // Array de dependências vazio para rodar apenas uma vez
+  }, [activeConversationId]); // Adicionamos activeConversationId como dependência
 
-  // Handlers para gerenciar conversas via REST (sem mudanças)
+  // Handlers para gerenciar conversas (sem mudanças)
   const handleSelectConversation = async (id) => {
     setActiveConversationId(id);
     try {
@@ -94,9 +102,23 @@ export default function ChatPage({ user, onLogout }) {
     }
   };
 
-  // Handler de envio de mensagem (Refatorado para Streaming)
+  // Handler de envio de mensagem
   const handleSendMessage = (messageText) => {
     if (!activeConversationId || !messageText.trim() || isSending) return;
+
+    // --- ATUALIZAÇÃO OTIMISTA DO TÍTULO ---
+    const currentConvo = conversations.find(c => c._id === activeConversationId);
+    // Verifica se a conversa atual é uma "Nova conversa" (ou seja, ainda não tem título)
+    if (currentConvo && currentConvo.title === 'Nova conversa') {
+      const newTitle = messageText.slice(0, 50);
+      // Atualiza o estado local imediatamente para uma UI mais rápida
+      setConversations(prevConvos =>
+        prevConvos.map(c =>
+          c._id === activeConversationId ? { ...c, title: newTitle } : c
+        )
+      );
+    }
+    // --- FIM DA ATUALIZAÇÃO OTIMISTA ---
 
     const userMessage = { role: 'user', text: messageText, _id: Date.now() };
     const assistantPlaceholder = { role: 'assistant', text: '', _id: Date.now() + 1 };
@@ -109,17 +131,9 @@ export default function ChatPage({ user, onLogout }) {
       message: messageText,
       userId: user._id,
     });
-
-    const currentConvo = conversations.find(c => c._id === activeConversationId);
-    if (currentConvo && currentConvo.messages?.length === 0) {
-        const updatedConversations = conversations.map(c =>
-            c._id === activeConversationId ? { ...c, title: messageText.slice(0, 30) } : c
-        );
-        setConversations(updatedConversations);
-    }
   };
 
-  // Renderização
+  // Renderização (sem mudanças)
   return (
     <Container fluid className="vh-100 p-0 d-flex flex-column">
       <Row className="g-0 flex-grow-1">

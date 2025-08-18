@@ -47,44 +47,50 @@ io.on('connection', (socket) => {
   //console.log('✅ Cliente conectado via WebSocket:', socket.id);
 
   socket.on('sendMessage', async ({ conversationId, message, userId }) => {
-    try {
-      // Validações de entrada (sem mudanças)
-      if (!mongoose.Types.ObjectId.isValid(conversationId) || !mongoose.Types.ObjectId.isValid(userId)) {
-        return socket.emit('chatError', { error: 'ID de conversa ou usuário inválido.' });
-      }
-      
-      const convo = await Conversation.findOne({ _id: conversationId, userId });
-      if (!convo) {
-        return socket.emit('chatError', { error: 'Conversa não encontrada' });
-      }
-
-      // Adiciona a mensagem do usuário ao histórico (sem mudanças)
-      convo.messages.push({ role: 'user', text: message });
-      const history = convo.messages.slice(-20);
-      
-      let fullReply = ''; // Variável para acumular a resposta completa para salvar no DB
-
-      // NOVA LÓGICA DE STREAMING
-      //console.log('... Iniciando stream com a API do Gemini ...');
-      for await (const chunk of streamCallGemini(history)) {
-        fullReply += chunk; // Acumula o pedaço para a resposta final
-        socket.emit('receiveReplyChunk', { chunk }); // Envia o pedaço imediatamente para o frontend
-      }
-      //console.log('✅ Stream da Gemini finalizado.');
-
-      // Quando o stream terminar, salva a mensagem completa no banco de dados
-      convo.messages.push({ role: 'assistant', text: fullReply });
-      await convo.save();
-      //console.log('✅ Conversa salva no banco de dados.');
-
-      // Notifica o frontend que a transmissão terminou
-      socket.emit('streamEnd');
-
-    } catch (err) {
-      console.error('❌ ERRO GERAL NO WEBSOCKET:', err);
-      socket.emit('chatError', { error: 'Erro interno do servidor ao processar a mensagem.' });
+  try {
+    if (!mongoose.Types.ObjectId.isValid(conversationId) || !mongoose.Types.ObjectId.isValid(userId)) {
+      return socket.emit('chatError', { error: 'ID de conversa ou usuário inválido.' });
     }
-  });
+    
+    const convo = await Conversation.findOne({ _id: conversationId, userId });
+    if (!convo) {
+      return socket.emit('chatError', { error: 'Conversa não encontrada' });
+    }
+
+    let newTitle = null;
+    // Verifica se a conversa não tem mensagens. Se for o caso, esta é a primeira mensagem.
+    if (convo.messages.length === 0) {
+      // Usa os primeiros 50 caracteres da mensagem como o novo título.
+      newTitle = message.slice(0, 50);
+      convo.title = newTitle;
+      //console.log(`✅ Título da conversa ${convo._id} atualizado para: "${newTitle}"`);
+    }
+
+    convo.messages.push({ role: 'user', text: message });
+    const history = convo.messages.slice(-20);
+    
+    let fullReply = '';
+    
+    //console.log('... Iniciando stream com a API do Gemini ...');
+    for await (const chunk of streamCallGemini(history)) {
+      fullReply += chunk;
+      socket.emit('receiveReplyChunk', { chunk });
+    }
+    //console.log('✅ Stream da Gemini finalizado.');
+
+    convo.messages.push({ role: 'assistant', text: fullReply });
+    // O .save() agora salva tanto as novas mensagens quanto o novo título (se houver).
+    await convo.save();
+    //console.log('✅ Conversa salva no banco de dados.');
+
+    // Notifica o frontend que a transmissão terminou, enviando o novo título se ele foi alterado.
+    socket.emit('streamEnd', { newTitle }); // Passa o novo título para o frontend
+
+  } catch (err) {
+    console.error('❌ ERRO GERAL NO WEBSOCKET:', err);
+    socket.emit('chatError', { error: 'Erro interno do servidor ao processar a mensagem.' });
+  }
+});
 
   socket.on('disconnect', () => {
     console.log('🔌 Cliente desconectado:', socket.id);
