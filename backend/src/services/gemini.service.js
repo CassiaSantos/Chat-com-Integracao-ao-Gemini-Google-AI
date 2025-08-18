@@ -1,31 +1,33 @@
-const axios = require('axios');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
+/**
+ * Função que chama a API Gemini em modo de streaming usando o SDK oficial.
+ * @param {object[]} messages - O histórico de mensagens da conversa.
+ * @returns {AsyncGenerator<string>} Um gerador assíncrono que produz pedaços de texto (chunks).
+ */
+async function* streamCallGemini(messages) {
+  // Neste ponto, temos certeza de que o dotenv.config() do server.js já foi executado.
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function callGemini({ apiKey, model, messages }) {
-  // Mapeia 'role' interno ('assistant') para o que a API espera ('model').
-  const contents = messages.map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.text }],
+  const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
+
+  // Converte nosso histórico de 'assistant' para 'model', como o SDK espera
+  const history = messages.map(msg => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: msg.text }],
   }));
 
-  const url = `${GEMINI_BASE}/v1beta/models/${model}:generateContent`;
-  const body = { contents };
+  // O SDK exige que a mensagem mais recente do usuário seja removida do histórico e enviada separadamente.
+  const userMessage = history.pop().parts[0].text;
 
-  try {
-    const { data } = await axios.post(url, body, {
-      headers: { 'Content-Type': 'application/json' },
-      params: { key: apiKey },
-    });
+  const chat = model.startChat({ history });
+  const result = await chat.sendMessageStream(userMessage);
 
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    return reply || 'Não foi possível obter uma resposta. Tente novamente.';
-  } catch (error) {
-    // depuração no console do backend
-    console.error('Erro na chamada da API Gemini:', error.response?.data || error.message);
-    // Lança o erro para que o controller possa pegá-lo
-    throw new Error('Falha ao comunicar com a IA.');
+  // Itera sobre o stream de resposta e envia cada pedaço de texto de volta
+  for await (const chunk of result.stream) {
+    const chunkText = chunk.text();
+    yield chunkText; // 'yield' envia o pedaço para quem chamou a função
   }
 }
 
-module.exports = { callGemini };
+module.exports = { streamCallGemini };
