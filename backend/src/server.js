@@ -65,17 +65,17 @@ io.on('connection', (socket) => {
       let fullReply = ''; // Variável para acumular a resposta completa para salvar no DB
 
       // NOVA LÓGICA DE STREAMING
-      console.log('... Iniciando stream com a API do Gemini ...');
+      //console.log('... Iniciando stream com a API do Gemini ...');
       for await (const chunk of streamCallGemini(history)) {
         fullReply += chunk; // Acumula o pedaço para a resposta final
         socket.emit('receiveReplyChunk', { chunk }); // Envia o pedaço imediatamente para o frontend
       }
-      console.log('✅ Stream da Gemini finalizado.');
+      //console.log('✅ Stream da Gemini finalizado.');
 
       // Quando o stream terminar, salva a mensagem completa no banco de dados
       convo.messages.push({ role: 'assistant', text: fullReply });
       await convo.save();
-      console.log('✅ Conversa salva no banco de dados.');
+      //console.log('✅ Conversa salva no banco de dados.');
 
       // Notifica o frontend que a transmissão terminou
       socket.emit('streamEnd');
