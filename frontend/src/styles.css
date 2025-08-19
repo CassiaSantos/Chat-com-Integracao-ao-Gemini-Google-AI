@@ -160,3 +160,21 @@ html, body, #root {
   visibility: visible; /* Mostra o botão no hover */
   opacity: 1;
 }
+
+/* Placeholder do input do prompt */
+.form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #6c757d; /* Um cinza padrão do Bootstrap com bom contraste */
+  opacity: 1; /* Garante que o Firefox não o deixe transparente */
+}
+
+.form-control:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: #6c757d;
+}
+
+.form-control::-ms-input-placeholder { /* Microsoft Edge */
+  color: #6c757d;
+}
+
+.bi-chat-left-text {
+margin-left: 10px;
+}

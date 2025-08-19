@@ -7,22 +7,41 @@ import Spinner from 'react-bootstrap/Spinner';
 
 export default function ChatWindow({ messages, activeConversationId, onSendMessage, isSending }) {
   const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
   const isChatActive = activeConversationId !== null;
-  const messagesEndRef = useRef(null); // Ref para o final da lista de mensagens
 
-  // Efeito para rolar para a mensagem mais recente
-  const scrollToBottom = () => {
+  useEffect(() => {
+    // Limpa o campo de input toda vez que a conversa ativa muda.
+    setNewMessage('');
+
+    // Foca o input apenas se a conversa for nova e vazia.
+    if (isChatActive && messages.length === 0) {
+      inputRef.current?.focus();
+    }
+  }, [activeConversationId, messages]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-  useEffect(scrollToBottom, [messages]);
-
+  }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
       onSendMessage(newMessage);
-      setNewMessage(''); // Limpa o input após o envio
+      setNewMessage('');
     }
+  };
+
+  const getPlaceholderText = () => {
+    if (!isChatActive) {
+      return 'Selecione uma conversa';
+    }
+    if (messages.length === 0) {
+      return 'Digite seu prompt aqui para começar...';
+    }
+    return 'Digite sua mensagem aqui...';
   };
 
   return (
@@ -41,21 +60,21 @@ export default function ChatWindow({ messages, activeConversationId, onSendMessa
             <MessageBubble key={msg._id || Math.random()} role={msg.role} text={msg.text} />
           ))
         )}
-        {/* Feedback visual de carregamento */}
         {isSending && (
           <MessageBubble role="assistant" text={
             <Spinner animation="border" size="sm" as="span" role="status" aria-hidden="true" />
           } />
         )}
-        <div ref={messagesEndRef} /> {/* Elemento invisível para o scroll */}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="chat-input-area">
         <Form onSubmit={handleSubmit}>
           <InputGroup>
             <Form.Control
-              placeholder={isChatActive ? 'Digite sua mensagem aqui...' : 'Selecione uma conversa'}
-              disabled={!isChatActive || isSending} // Desabilita durante o envio
+              ref={inputRef}
+              placeholder={getPlaceholderText()}
+              disabled={!isChatActive || isSending}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               size="lg"
