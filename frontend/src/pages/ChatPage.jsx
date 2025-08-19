@@ -6,6 +6,8 @@ import * as api from '../lib/api';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Modal from 'react-bootstrap/Modal'; // componente Modal
+import Button from 'react-bootstrap/Button'; // Button para o Modal
 
 const socket = io(import.meta.env.VITE_WS_URL || 'http://localhost:5000');
 
@@ -15,6 +17,9 @@ export default function ChatPage({ user, onLogout }) {
   const [messages, setMessages] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  // ESTADOS PARA O MODAL DE EXCLUSÃO:
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState(null);
 
   // Efeito para buscar as conversas
   useEffect(() => {
@@ -132,31 +137,89 @@ export default function ChatPage({ user, onLogout }) {
       userId: user._id,
     });
   };
+  
+  // Abre o modal de confirmação e armazena o ID da conversa a ser excluída
+  const handleDeleteRequest = (id) => {
+    setConversationToDelete(id);
+    setShowDeleteModal(true);
+  };
 
-  // Renderização (sem mudanças)
+  // Fecha o modal e limpa o estado
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setConversationToDelete(null);
+  };
+
+  // Executa a exclusão quando o usuário confirma no modal
+  const handleConfirmDelete = async () => {
+    if (!conversationToDelete) return;
+
+    try {
+      // Chama a API do backend para excluir do banco de dados
+      await api.deleteConversation(conversationToDelete);
+
+      // Atualiza o estado do frontend para remover a conversa da lista
+      setConversations(prev => prev.filter(c => c._id !== conversationToDelete));
+
+      // Se a conversa excluída era a ativa, limpa a janela de chat
+      if (activeConversationId === conversationToDelete) {
+        setActiveConversationId(null);
+        setMessages([]);
+      }
+
+    } catch (error) {
+      console.error('Falha ao excluir conversa', error);
+      // Mostra uma notificação de erro para o usuário
+    } finally {
+      // Fecha o modal independentemente do resultado
+      handleCloseDeleteModal();
+    }
+  };
+
   return (
-    <Container fluid className="vh-100 p-0 d-flex flex-column">
-      <Row className="g-0 flex-grow-1">
-        <Col lg={3} md={4} className="d-flex flex-column sidebar-col">
-          <ConversationList
-            loading={loadingConversations}
-            items={conversations}
-            activeId={activeConversationId}
-            onSelect={handleSelectConversation}
-            onNew={handleNewConversation}
-            username={user.username}
-            onLogout={onLogout}
-          />
-        </Col>
-        <Col lg={9} md={8} className="d-flex flex-column chat-window-col">
-          <ChatWindow
-            messages={messages}
-            activeConversationId={activeConversationId}
-            onSendMessage={handleSendMessage}
-            isSending={isSending}
-          />
-        </Col>
-      </Row>
-    </Container>
+    <>
+      <Container fluid className="vh-100 p-0 d-flex flex-column">
+        <Row className="g-0 flex-grow-1">
+          <Col lg={3} md={4} className="d-flex flex-column sidebar-col">
+            <ConversationList
+              loading={loadingConversations}
+              items={conversations}
+              activeId={activeConversationId}
+              onSelect={handleSelectConversation}
+              onNew={handleNewConversation}
+              onDelete={handleDeleteRequest} // Passa o handler para abrir o modal
+              username={user.username}
+              onLogout={onLogout}
+            />
+          </Col>
+          <Col lg={9} md={8} className="d-flex flex-column chat-window-col">
+            <ChatWindow
+              messages={messages}
+              activeConversationId={activeConversationId}
+              onSendMessage={handleSendMessage}
+              isSending={isSending}
+            />
+          </Col>
+        </Row>
+      </Container>
+
+      {/* --- MODAL DE CONFIRMAÇÃO --- */}
+      <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Exclusão</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Você tem certeza que deseja excluir esta conversa? Esta ação não pode ser desfeita.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseDeleteModal}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleConfirmDelete}>
+            Excluir
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 }

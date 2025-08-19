@@ -149,3 +149,14 @@ html, body, #root {
 .text-content a:hover {
   text-decoration: underline;
 }
+
+.list-group-item .delete-btn {
+  visibility: hidden; /* Esconde o botão por padrão */
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.list-group-item:hover .delete-btn {
+  visibility: visible; /* Mostra o botão no hover */
+  opacity: 1;
+}
