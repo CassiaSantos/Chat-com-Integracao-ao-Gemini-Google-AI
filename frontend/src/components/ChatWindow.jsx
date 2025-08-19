@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
+import { BsArrowLeft } from 'react-icons/bs'; // Importa um ícone de seta
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Spinner from 'react-bootstrap/Spinner';
 
-export default function ChatWindow({ messages, activeConversationId, onSendMessage, isSending }) {
+export default function ChatWindow({
+  messages, 
+  activeConversationId, 
+  onSendMessage, 
+  isSending, 
+  onShowListView, //prop para o handler de "voltar"
+}) {
+
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-
   const isChatActive = activeConversationId !== null;
 
   useEffect(() => {
@@ -46,6 +53,22 @@ export default function ChatWindow({ messages, activeConversationId, onSendMessa
 
   return (
     <main className="chat-window">
+    {/* HEADER DO CHAT */}
+      <div className="chat-header">
+        {/* Botão "Voltar" que só aparece em telas pequenas (d-md-none) */}
+        <Button
+          variant="link"
+          className="d-md-none back-button"
+          onClick={onShowListView}
+        >
+          <BsArrowLeft size={20} />
+        </Button>
+        <h5 className="mb-0 text-truncate">
+          {}
+        </h5>
+      </div>
+      {/* FIM DO HEADER */}
+      
       <div className="chat-messages">
         {!isChatActive ? (
           <div className="initial-message">

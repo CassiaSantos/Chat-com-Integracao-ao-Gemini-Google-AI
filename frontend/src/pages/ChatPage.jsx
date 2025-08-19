@@ -6,8 +6,8 @@ import * as api from '../lib/api';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Modal from 'react-bootstrap/Modal'; // componente Modal
-import Button from 'react-bootstrap/Button'; // Button para o Modal
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
 
 const socket = io(import.meta.env.VITE_WS_URL || 'http://localhost:5000');
 
@@ -17,9 +17,9 @@ export default function ChatPage({ user, onLogout }) {
   const [messages, setMessages] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  // ESTADOS PARA O MODAL DE EXCLUSÃO:
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState(null);
+  const [mobileView, setMobileView] = useState('list');
 
   // Efeito para buscar as conversas
   useEffect(() => {
@@ -36,25 +36,23 @@ export default function ChatPage({ user, onLogout }) {
     fetchConversations();
   }, []);
 
-  // Efeito para gerenciar os eventos de WebSocket
+  // Efeito para gerenciar os eventos de WebSocket, agora com a dependência correta.
   useEffect(() => {
     const handleReceiveReplyChunk = ({ chunk }) => {
-      setMessages(prevMessages => {
-        const lastMessage = prevMessages[prevMessages.length - 1];
+      // Usamos a forma funcional de setState (prev => ...) para evitar dependências.
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1];
         if (lastMessage && lastMessage.role === 'assistant') {
           const updatedLastMessage = { ...lastMessage, text: lastMessage.text + chunk };
-          return [...prevMessages.slice(0, -1), updatedLastMessage];
+          return [...prev.slice(0, -1), updatedLastMessage];
         }
-        return prevMessages;
+        return prev;
       });
     };
     
-    // --- LÓGICA DE ATUALIZAÇÃO DO TÍTULO NO FRONTEND ---
     const handleStreamEnd = ({ newTitle }) => {
       setIsSending(false);
-      // Se o backend enviou um novo título, usamos ele como a "fonte da verdade"
-      // para garantir que o frontend e o backend estejam sincronizados.
-      if (newTitle) {
+      if (newTitle && activeConversationId) {
         setConversations(prevConvos =>
           prevConvos.map(c =>
             c._id === activeConversationId ? { ...c, title: newTitle } : c
@@ -65,7 +63,7 @@ export default function ChatPage({ user, onLogout }) {
     
     const handleChatError = ({ error }) => {
       console.error('Erro recebido via WebSocket:', error);
-      setIsSending(false); // Também para o 'sending' em caso de erro
+      setIsSending(false);
       const errorMessage = { 
         role: 'assistant', 
         text: 'Desculpe, ocorreu um erro.', 
@@ -83,14 +81,16 @@ export default function ChatPage({ user, onLogout }) {
       socket.off('streamEnd', handleStreamEnd);
       socket.off('chatError', handleChatError);
     };
-  }, [activeConversationId]); // Adicionamos activeConversationId como dependência
+    // O array de dependências vazio [] garante que os ouvintes sejam configurados
+    // apenas uma vez, evitando o bug.
+  }, [activeConversationId]); // Mantemos activeConversationId aqui para garantir que a lógica do newTitle funcione corretamente
 
-  // Handlers para gerenciar conversas (sem mudanças)
   const handleSelectConversation = async (id) => {
     setActiveConversationId(id);
     try {
       const convo = await api.getConversation(id);
       setMessages(convo.messages);
+      setMobileView('chat');
     } catch (error) {
       console.error('Falha ao buscar mensagens da conversa', error);
       setMessages([]);
@@ -106,24 +106,32 @@ export default function ChatPage({ user, onLogout }) {
       console.error('Falha ao criar nova conversa', error);
     }
   };
+  
+  const handleShowListView = () => {
+    setMobileView('list');
+  };
 
-  // Handler de envio de mensagem
   const handleSendMessage = (messageText) => {
     if (!activeConversationId || !messageText.trim() || isSending) return;
-
-    // --- ATUALIZAÇÃO OTIMISTA DO TÍTULO ---
+    
     const currentConvo = conversations.find(c => c._id === activeConversationId);
-    // Verifica se a conversa atual é uma "Nova conversa" (ou seja, ainda não tem título)
+    
+    // ATUALIZAÇÃO OTIMISTA DO TÍTULO (COM TRUNCAMENTO)
     if (currentConvo && currentConvo.title === 'Nova conversa') {
-      const newTitle = messageText.slice(0, 50);
-      // Atualiza o estado local imediatamente para uma UI mais rápida
+      let newTitle;
+      // Replica a mesma lógica de truncamento do backend
+      if (messageText.length > 30) {
+        newTitle = messageText.slice(0, 30) + '...';
+      } else {
+        newTitle = messageText;
+      }
+      
       setConversations(prevConvos =>
         prevConvos.map(c =>
           c._id === activeConversationId ? { ...c, title: newTitle } : c
         )
       );
     }
-    // --- FIM DA ATUALIZAÇÃO OTIMISTA ---
 
     const userMessage = { role: 'user', text: messageText, _id: Date.now() };
     const assistantPlaceholder = { role: 'assistant', text: '', _id: Date.now() + 1 };
@@ -138,40 +146,30 @@ export default function ChatPage({ user, onLogout }) {
     });
   };
   
-  // Abre o modal de confirmação e armazena o ID da conversa a ser excluída
   const handleDeleteRequest = (id) => {
     setConversationToDelete(id);
     setShowDeleteModal(true);
   };
 
-  // Fecha o modal e limpa o estado
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
     setConversationToDelete(null);
   };
 
-  // Executa a exclusão quando o usuário confirma no modal
   const handleConfirmDelete = async () => {
     if (!conversationToDelete) return;
 
     try {
-      // Chama a API do backend para excluir do banco de dados
       await api.deleteConversation(conversationToDelete);
-
-      // Atualiza o estado do frontend para remover a conversa da lista
       setConversations(prev => prev.filter(c => c._id !== conversationToDelete));
-
-      // Se a conversa excluída era a ativa, limpa a janela de chat
       if (activeConversationId === conversationToDelete) {
         setActiveConversationId(null);
         setMessages([]);
+        setMobileView('list'); // Retorna para a lista se a conversa ativa for excluída
       }
-
     } catch (error) {
       console.error('Falha ao excluir conversa', error);
-      // Mostra uma notificação de erro para o usuário
     } finally {
-      // Fecha o modal independentemente do resultado
       handleCloseDeleteModal();
     }
   };
@@ -179,31 +177,31 @@ export default function ChatPage({ user, onLogout }) {
   return (
     <>
       <Container fluid className="vh-100 p-0 d-flex flex-column">
-        <Row className="g-0 flex-grow-1">
-          <Col lg={3} md={4} className="d-flex flex-column sidebar-col">
+        <Row className={`g-0 flex-grow-1 ${mobileView === 'chat' ? 'show-chat-view' : ''}`}>
+          <Col md={4} lg={3} className="d-flex flex-column sidebar-col">
             <ConversationList
               loading={loadingConversations}
               items={conversations}
               activeId={activeConversationId}
               onSelect={handleSelectConversation}
               onNew={handleNewConversation}
-              onDelete={handleDeleteRequest} // Passa o handler para abrir o modal
+              onDelete={handleDeleteRequest}
               username={user.username}
               onLogout={onLogout}
             />
           </Col>
-          <Col lg={9} md={8} className="d-flex flex-column chat-window-col">
+          <Col md={8} lg={9} className="d-flex flex-column chat-window-col">
             <ChatWindow
               messages={messages}
               activeConversationId={activeConversationId}
               onSendMessage={handleSendMessage}
               isSending={isSending}
+              onShowListView={handleShowListView}
             />
           </Col>
         </Row>
       </Container>
 
-      {/* --- MODAL DE CONFIRMAÇÃO --- */}
       <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Exclusão</Modal.Title>

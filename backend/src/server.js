@@ -59,12 +59,13 @@ io.on('connection', (socket) => {
 
     let newTitle = null;
     // Verifica se a conversa não tem mensagens. Se for o caso, esta é a primeira mensagem.
-    if (convo.messages.length === 0) {
-      // Usa os primeiros 50 caracteres da mensagem como o novo título.
-      newTitle = message.slice(0, 50);
-      convo.title = newTitle;
-      //console.log(`✅ Título da conversa ${convo._id} atualizado para: "${newTitle}"`);
-    }
+    if (message.length > 35) {
+        // Se a mensagem for maior que 35 caracteres, trunca e adiciona "..."
+        newTitle = message.slice(0, 30) + '...';
+      } else {
+        // Senão, usa a mensagem inteira como título
+        newTitle = message;
+      }
 
     convo.messages.push({ role: 'user', text: message });
     const history = convo.messages.slice(-20);

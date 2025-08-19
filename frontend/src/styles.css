@@ -1,4 +1,7 @@
-/* Tema Escuro - Variáveis de Cores */
+/* -----------------------------------------
+ * 1. Configurações Globais e Tema
+ * ----------------------------------------- */
+
 :root {
   --bs-body-bg: #1e1e1e;
   --bs-body-color: #d4d4d4;
@@ -6,17 +9,21 @@
   --bs-border-color: #333333;
 }
 
-/* Ajustes para o layout do Bootstrap preencher a tela */
+/* Previne o scroll indesejado na página inteira, especialmente no mobile */
 html, body, #root {
   height: 100%;
+  overflow: hidden;
 }
+
+/* -----------------------------------------
+ * 2. Layout Principal (Sidebar e Janela de Chat)
+ * ----------------------------------------- */
 
 .sidebar-col, .chat-window-col {
   height: 100%;
-  max-height: 100vh; /* Garante que as colunas não ultrapassem a altura da tela */
+  max-height: 100vh;
 }
 
-/* Estilos da Sidebar */
 .sidebar {
   background-color: var(--bs-secondary-bg);
   border-right: 1px solid var(--bs-border-color);
@@ -24,22 +31,28 @@ html, body, #root {
   flex-direction: column;
   height: 100%;
 }
+
 .sidebar-header, .sidebar-footer {
   padding: 1rem;
+  border-color: var(--bs-border-color) !important;
 }
 .sidebar-header {
-  border-bottom: 1px solid var(--bs-border-color);
+  border-bottom: 1px solid;
 }
 .sidebar-footer {
-  border-top: 1px solid var(--bs-border-color);
+  border-top: 1px solid;
 }
 
 .conversation-items {
-  flex-grow: 1;
-  overflow-y: auto;
+  flex-grow: 1; /* Ocupa o espaço restante */
+  overflow-y: auto; /* Adiciona scroll apenas à lista de conversas */
 }
 
-/* Ajuste de cores para ListGroup no tema escuro */
+/* -----------------------------------------
+ * 3. Componentes Específicos
+ * ----------------------------------------- */
+
+/* --- Lista de Conversas (Sidebar) --- */
 .list-group-item {
   background-color: transparent;
   border-color: var(--bs-border-color);
@@ -53,20 +66,49 @@ html, body, #root {
   background-color: #333;
 }
 
-/* Estilos da Janela de Chat */
+.list-group-item .delete-btn {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+.list-group-item:hover .delete-btn {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* --- Janela de Chat --- */
 .chat-window {
   display: flex;
   flex-direction: column;
   height: 100%;
   background-color: var(--bs-body-bg);
 }
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color);
+  background-color: var(--bs-secondary-bg);
+}
+
+.back-button {
+  color: var(--bs-body-color);
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+}
+.back-button:hover {
+  color: #fff;
+}
+
 .chat-messages {
   flex-grow: 1;
   padding: 1rem;
   overflow-y: auto;
   display: flex;
-  flex-direction: column; /* Para empilhar as mensagens */
+  flex-direction: column;
 }
+
 .chat-input-area {
   padding: 1rem;
   border-top: 1px solid var(--bs-border-color);
@@ -78,13 +120,18 @@ html, body, #root {
   color: #888;
 }
 
-/* Estilos das Bolhas de Mensagem (Mantidos) */
+.bi-chat-left-text {
+  margin: 16px;
+}
+
+/* --- Bolhas de Mensagem --- */
 .message-bubble {
   max-width: 70%;
   padding: 0.75rem 1rem;
   border-radius: 12px;
   margin-bottom: 0.5rem;
   line-height: 1.4;
+  word-wrap: break-word; /* Garante que palavras longas não quebrem o layout */
 }
 .message-bubble.user {
   background-color: var(--bs-primary);
@@ -104,44 +151,22 @@ html, body, #root {
   opacity: 0.8;
 }
 
-/* Estilos da Página de Login (Refatorado) */
-.login-box {
-  background-color: var(--bs-secondary-bg);
-  padding: 2rem;
-  border-radius: 8px;
-  border: 1px solid var(--bs-border-color);
+/* --- Conteúdo Markdown --- */
+.text-content p:last-child {
+  margin-bottom: 0; /* Remove a margem extra do último parágrafo */
 }
-
-/* Estilos para o conteúdo renderizado por Markdown */
-.text-content {
-  line-height: 1.6;
-}
-
-.text-content h1, .text-content h2, .text-content h3 {
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.text-content p {
-  margin-bottom: 0.5rem; /* Espaçamento entre parágrafos */
-}
-
 .text-content ul, .text-content ol {
-  padding-left: 1.5rem; /* Alinha as listas */
+  padding-left: 1.5rem;
   margin-bottom: 0.5rem;
 }
-
 .text-content strong {
-  color: #fff; /* Deixa o negrito com mais destaque */
+  color: #fff;
 }
-
 .text-content code {
   background-color: #111;
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
 }
-
 .text-content a {
   color: #3391ff;
   text-decoration: none;
@@ -150,31 +175,38 @@ html, body, #root {
   text-decoration: underline;
 }
 
-.list-group-item .delete-btn {
-  visibility: hidden; /* Esconde o botão por padrão */
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
+/* --- Página de Login --- */
+.login-box {
+  background-color: var(--bs-secondary-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--bs-border-color);
 }
 
-.list-group-item:hover .delete-btn {
-  visibility: visible; /* Mostra o botão no hover */
+/* --- Placeholder do Input --- */
+.form-control::placeholder {
+  color: #6c757d;
   opacity: 1;
 }
+.form-control:-ms-input-placeholder { color: #6c757d; }
+.form-control::-ms-input-placeholder { color: #6c757d; }
 
-/* Placeholder do input do prompt */
-.form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-  color: #6c757d; /* Um cinza padrão do Bootstrap com bom contraste */
-  opacity: 1; /* Garante que o Firefox não o deixe transparente */
-}
 
-.form-control:-ms-input-placeholder { /* Internet Explorer 10-11 */
-  color: #6c757d;
-}
+/* -----------------------------------------
+ * 4. Responsividade e Navegação Móvel
+ * ----------------------------------------- */
 
-.form-control::-ms-input-placeholder { /* Microsoft Edge */
-  color: #6c757d;
-}
+@media (max-width: 767.98px) {
+  /* Por padrão (view de lista), esconde a janela de chat. */
+  .chat-window-col {
+    display: none !important; /* !important garante que esta regra vença */
+  }
 
-.bi-chat-left-text {
-margin-left: 10px;
+  /* Quando a classe .show-chat-view é adicionada (view de chat)... */
+  .show-chat-view .sidebar-col {
+    display: none !important; /* ...esconde a lista de conversas. */
+  }
+  .show-chat-view .chat-window-col {
+    display: flex !important; /* ...e mostra a janela de chat. */
+  }
 }
