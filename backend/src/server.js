@@ -66,8 +66,8 @@ socket.on('sendMessage', async ({ conversationId, message, userId }) => {
     };
 
     if (initialConvo.messages.length === 0) {
-      if (message.length > 35) {
-        newTitle = message.slice(0, 35) + '...';
+      if (message.length > 30) {
+        newTitle = message.slice(0, 30) + '...';
       } else {
         newTitle = message;
       }
