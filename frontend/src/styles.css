@@ -120,8 +120,8 @@ html, body, #root {
   color: #888;
 }
 
-.bi-chat-left-text {
-  margin: 16px;
+.bi-chat-dots-fill {
+  margin: 16px 8px;
 }
 
 /* --- Bolhas de Mensagem --- */

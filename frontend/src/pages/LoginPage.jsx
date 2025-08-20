@@ -38,7 +38,9 @@ export default function LoginPage({ onLogin }) {
       <Row className="justify-content-center w-100">
         <Col md={6} lg={4}>
           <div className="login-box">
-            <h1 className="h3 mb-3 text-center">Bem-vindo ao Chat Gemini</h1>
+            <h4 className="h4 mb-3 text-center">Bem-vinde ao</h4>
+            <h1 className="h1 mb-3 text-center">Cass-IA&#x2728;</h1>
+            <h3 className="h3 mb-3 text-center">Seu chat assistente com Gemini</h3>
             <p className="text-muted text-center mb-4">
               Digite seu nome de usuário para continuar.
             </p>
