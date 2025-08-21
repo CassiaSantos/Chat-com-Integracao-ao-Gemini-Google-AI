@@ -3,6 +3,9 @@
  * ----------------------------------------- */
 
 :root {
+  --bs-primary-rgb: rgb(250, 113, 71); /* RGB de #FF7D56 */
+  --bs-primary: #fa7147;
+  --bs-primary-hover: #ee5f34;
   --bs-body-bg: #1e1e1e;
   --bs-body-color: #d4d4d4;
   --bs-secondary-bg: #252526;
@@ -93,12 +96,12 @@ html, body, #root {
 }
 
 .back-button {
-  color: var(--bs-body-color);
+  color: var(--bs-primary);
   padding: 0.25rem 0.5rem;
   margin-right: 0.5rem;
 }
 .back-button:hover {
-  color: #fff;
+  color: #ffffff;
 }
 
 .chat-messages {
@@ -117,7 +120,7 @@ html, body, #root {
 .initial-message {
   margin: auto;
   text-align: center;
-  color: #888;
+  color: #888888;
 }
 
 .bi-chat-dots-fill {
@@ -135,7 +138,7 @@ html, body, #root {
 }
 .message-bubble.user {
   background-color: var(--bs-primary);
-  color: white;
+  color: #ffffff;
   align-self: flex-end;
   border-bottom-right-radius: 2px;
 }
@@ -160,7 +163,7 @@ html, body, #root {
   margin-bottom: 0.5rem;
 }
 .text-content strong {
-  color: #fff;
+  color: #ffffff;
 }
 .text-content code {
   background-color: #111;
@@ -168,7 +171,7 @@ html, body, #root {
   border-radius: 4px;
 }
 .text-content a {
-  color: #3391ff;
+  color: var(--bs-primary);
   text-decoration: none;
 }
 .text-content a:hover {
@@ -188,8 +191,17 @@ html, body, #root {
   color: #6c757d;
   opacity: 1;
 }
-.form-control:-ms-input-placeholder { color: #6c757d; }
-.form-control::-ms-input-placeholder { color: #6c757d; }
+.form-control:-ms-input-placeholder { 
+  color: #6c757d; 
+}
+.form-control::-ms-input-placeholder { 
+  color: #6c757d; 
+}
+
+/* --- Foco do Input --- */
+.form-control:focus {
+  border-color: #FF7D56;
+}
 
 
 /* -----------------------------------------
@@ -209,4 +221,57 @@ html, body, #root {
   .show-chat-view .chat-window-col {
     display: flex !important; /* ...e mostra a janela de chat. */
   }
+}
+
+/* --- Botões Primários (Enviar, Login, Nova Conversa) --- */
+
+/* Cor do fundo e borda para todos os botões primários */
+.btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+/* Cor no hover E no estado ativo */
+.btn-primary:hover, .btn-primary:active {
+  background-color: var(--bs-primary-hover);
+  border-color: var(--bs-primary-hover);
+}
+
+/* Cor no estado de foco*/
+.btn-primary:focus {
+  background-color: var(--bs-primary-hover) !important;
+  border-color: var(--bs-primary-hover) !important;
+  box-shadow: 0 0 0 0.25rem rgba(255, 125, 86, 0.5) !important;
+}
+
+/* Cor no estado desabilitado */
+.btn-primary:disabled {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  opacity: 0.5; /* Deixa o botão semi-transparente */
+}
+
+
+/* --- Botão "+ Nova Conversa" (Outline) --- */
+.btn-outline-primary {
+  color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:active {
+  color: #fff;
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+}
+
+
+/* --- Botão "Sair" --- */
+.btn-secondary {
+  background-color: #444444;
+  border-color: #444444;
+}
+
+.btn-secondary:hover, .btn-secondary:active {
+  background-color: #FF7D56 !important; /* Cor laranja no hover e clique */
+  border-color: #FF7D56 !important;
 }
