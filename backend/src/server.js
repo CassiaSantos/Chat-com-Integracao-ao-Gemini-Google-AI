@@ -6,6 +6,7 @@ const http = require('http');
 const { Server } = require("socket.io"); // Importa o Server do socket.io
 const mongoose = require('mongoose'); // para validar o ID
 const { streamCallGemini } = require('./services/gemini.service'); // Importa a nova função de stream
+const { truncateText } = require('./utils/textUtils');
 
 // serviços e models necessários
 const { callGemini } = require('./services/gemini.service');
@@ -66,14 +67,13 @@ socket.on('sendMessage', async ({ conversationId, message, userId }) => {
     };
 
     if (initialConvo.messages.length === 0) {
-      if (message.length > 30) {
-        newTitle = message.slice(0, 30) + '...';
-      } else {
-        newTitle = message;
-      }
+      // Agora usamos a função de utilidade, passando o limite de 35
+      newTitle = truncateText(message, 30);
+      initialConvo.title = newTitle;
+
       // Adiciona a atualização do título ao payload
       updatePayload.$set = { title: newTitle };
-      console.log(`✅ Título da conversa ${conversationId} será atualizado para: "${newTitle}"`);
+      //console.log(`✅ Título da conversa ${conversationId} será atualizado para: "${newTitle}"`);
     }
     
     // Atualiza a conversa com a mensagem do usuário e o novo título (se houver)
@@ -97,7 +97,7 @@ socket.on('sendMessage', async ({ conversationId, message, userId }) => {
       $push: { messages: { role: 'assistant', text: fullReply } }
     });
     
-    console.log('✅ Conversa salva no banco de dados.');
+    //console.log('✅ Conversa salva no banco de dados.');
     socket.emit('streamEnd', { newTitle });
 
   } catch (err) {
