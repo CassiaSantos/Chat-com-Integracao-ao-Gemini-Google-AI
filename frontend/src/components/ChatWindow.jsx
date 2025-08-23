@@ -46,7 +46,7 @@ export default function ChatWindow({
       return 'Selecione uma conversa';
     }
     if (messages.length === 0) {
-      return 'Digite seu prompt aqui para começar...';
+      return 'Digite seu prompt aqui...';
     }
     return 'Digite sua mensagem aqui...';
   };

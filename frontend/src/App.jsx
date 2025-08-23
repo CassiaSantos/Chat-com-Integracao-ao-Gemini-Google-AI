@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider } from './context/ThemeContext';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
 
@@ -25,13 +26,25 @@ export default function App() {
     setUser(null);
   };
 
+  // return (
+  //   <div className="app-container">
+  //     {user ? (
+  //       <ChatPage user={user} onLogout={handleLogout} />
+  //     ) : (
+  //       <LoginPage onLogin={handleLogin} />
+  //     )}
+  //   </div>
+  // );
+  
+  
   return (
-    <div className="app-container">
-      {user ? (
-        <ChatPage user={user} onLogout={handleLogout} />
-      ) : (
-        <LoginPage onLogin={handleLogin} />
-      )}
-    </div>
+    // Envolve a aplicação com o ThemeProvider, passando o tema inicial do usuário
+    <ThemeProvider initialTheme={user?.theme || 'dark'}>
+        {user ? (
+          <ChatPage user={user} onLogout={handleLogout} />
+        ) : (
+          <LoginPage onLogin={handleLogin} />
+        )}
+    </ThemeProvider>
   );
 }

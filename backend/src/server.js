@@ -15,6 +15,7 @@ const Conversation = require('./models/Conversation');
 // Rotas existentes
 const authRoutes = require('./routes/auth.routes');
 const conversationsRoutes = require('./routes/conversations.routes');
+const userRoutes = require('./routes/user.routes');
 const { requireAuth } = require('./middleware/auth.middleware');
 const { errorHandler } = require('./middleware/error');
 
@@ -40,6 +41,7 @@ app.use(cors({ origin: process.env.CLIENT_ORIGIN || '*' }));
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/conversations', requireAuth, conversationsRoutes);
+app.use('/api/user', requireAuth, userRoutes);
 
 
 // LÓGICA DO WEBSOCKET

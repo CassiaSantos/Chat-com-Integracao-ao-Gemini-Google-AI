@@ -59,4 +59,8 @@ export async function sendMessage({ conversationId, message }) {
   return data;
 }
 
+export async function updateUserTheme(theme) {
+  await api.put('/user/theme', { theme });
+}
+
 export default api;
