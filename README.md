@@ -45,6 +45,7 @@ A aplicação permite que os usuários se autentiquem com um nome, criem múltip
     -   Renomeação automática baseada na primeira mensagem do usuário (com limite de 30 caracteres).
     -   Exclusão de conversas com modal de confirmação.
 -   **Interface Responsiva:** Design adaptável que oferece uma excelente experiência tanto em desktops quanto em dispositivos móveis, com um layout de duas telas para mobile.
+-   **Seletor de Tema (Light/Dark):** Permite ao usuário escolher o tema visual, com a preferência salva no banco de dados.
 -   **Testes Automatizados:** Suíte de testes unitários para o backend (Jest) e para os componentes do frontend (Vitest + React Testing Library) para garantir a qualidade e a estabilidade do código.
 
 ---
