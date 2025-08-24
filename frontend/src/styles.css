@@ -313,3 +313,23 @@ body {
   border-color: var(--bs-primary);
   box-shadow: none;
 }
+
+/* ESTILO DO MODAL PARA TEMAS DARK/LIGHT */
+.modal-content {
+  background-color: var(--bg-color); /* Fundo principal do modal */
+  color: var(--text-primary);       /* Cor do texto principal */
+  border: 1px solid var(--border-color);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Torna escuro o botão de fechar no header do modal apenas quando o tema for claro. */
+body[data-theme='light'] .modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(50%);
+}
